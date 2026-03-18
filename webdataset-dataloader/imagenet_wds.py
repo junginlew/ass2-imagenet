@@ -7,8 +7,7 @@ from torch.utils.data import DataLoader
 import webdataset as wds
 import albumentations as A
 
-# base.py에 정의된 BaseDataModule을 상속받음
-from aidall_seg.data import BaseDataModule 
+from aidall_seg.data import BaseDataModule  # base.py에 정의된 BaseDataModule
 
 # ImageNet 정규화 상수
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
