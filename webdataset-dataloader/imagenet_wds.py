@@ -137,26 +137,30 @@ class ImageNetWDSDataModule(BaseDataModule):
         
         return wds.DataPipeline(*pipeline)
 
+
     def setup(self, stage: str = None) -> None:
         if stage == "fit" or stage is None:
             train_pipe = self._build_wds_pipeline("imagenet/train", self.train_transforms, True)
             
             # 배치를 묶을 때 BaseDataModule의 MixUp/CutMix collate_fn을 적용
             if self.mixup_cutmix is not None:
-                self.train_dataset = train_pipe.batched(
-                    self.train_batch_size, 
-                    collation_fn=self.mixup_cutmix_fn
+                train_pipe.append(
+                    wds.batched(self.train_batch_size, collation_fn=self.mixup_cutmix_fn)
                 )
             else:
-                self.train_dataset = train_pipe.batched(self.train_batch_size)
+                train_pipe.append(wds.batched(self.train_batch_size))
+                
+            self.train_dataset = train_pipe
 
             val_pipe = self._build_wds_pipeline("imagenet/val", self.val_transforms, False)
-            self.val_dataset = val_pipe.batched(self.val_batch_size)
+            val_pipe.append(wds.batched(self.val_batch_size))
+            self.val_dataset = val_pipe
         
         if stage == "test" or stage is None:
             test_pipe = self._build_wds_pipeline("imagenet/val", self.val_transforms, False)
-            self.test_dataset = test_pipe.batched(self.val_batch_size)
-
+            test_pipe.append(wds.batched(self.val_batch_size))
+            self.test_dataset = test_pipe
+    
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
             self.train_dataset, 
