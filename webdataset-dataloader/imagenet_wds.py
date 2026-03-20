@@ -46,6 +46,8 @@ class ImageNetWDSDataModule(BaseDataModule):
         reprob: float = 0.0,
         remode: str = "pixel",
         recount: int = 1,
+        shuffle_buffer_size: int = 5000,
+        shuffle_initial_size: int = 1000,
     ) -> None:
         super().__init__(
             data_dir,
@@ -63,6 +65,8 @@ class ImageNetWDSDataModule(BaseDataModule):
         )
 
         self.v2 = v2
+        self.shuffle_buffer_size = shuffle_buffer_size
+        self.shuffle_initial_size = shuffle_initial_size
 
         load_dotenv()
         self.endpoint_url = os.getenv("S3_ENDPOINT_URL")
@@ -131,7 +135,7 @@ class ImageNetWDSDataModule(BaseDataModule):
         pipeline.append(wds.to_tuple("jpg;jpeg;png", "cls"))
         
         if is_train:
-            pipeline.append(wds.shuffle(5000, initial=1000)) # Buffer Shuffling
+            pipeline.append(wds.shuffle(self.shuffle_buffer_size, initial=self.shuffle_initial_size)) # Buffer Shuffling
             
         pipeline.append(wds.map(self._apply_albumentations(transforms)))
         
